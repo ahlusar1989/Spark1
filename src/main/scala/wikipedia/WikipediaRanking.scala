@@ -4,6 +4,8 @@ import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import WikipediaData.filePath
+import WikipediaData.parse
 
 case class WikipediaArticle(title: String, text: String)
 
@@ -19,18 +21,8 @@ object WikipediaRanking {
 
   val sc: SparkContext = new SparkContext(conf)
 
-  val wikiRdd: RDD[WikipediaArticle] = sc.textFile("wikiepedia.dat").map {
-    line =>
-      val splitLine = line.split("\t")
-      try {
-        val title = splitLine(0)
-        val text = splitLine(1)
-        WikipediaArticle(title, text)
-      }
-      catch {
-        case _ : Throwable => WikipediaArticle("", "")
-      }
-  }
+  val wikiRdd: RDD[WikipediaArticle] = sc.textFile(filePath).map(line => parse(line))
+
 
   /** Returns the number of articles on which the language `lang` occurs.
    */
@@ -73,14 +65,7 @@ object WikipediaRanking {
   }
 
 
-  def rankLangsUsingIndex(index: RDD[(String, Iterable[WikipediaArticle])]): List[(String, Int)] = {
-    val ranks = index.flatMap(_._2.map(article => article.text))
-                              .distinct
-                              .collect
-                              .zipWithIndex
-                              .toList
-
-  }
+  def rankLangsUsingIndex(index: RDD[(String, Iterable[WikipediaArticle])]): List[(String, Int)] = ???
 
   /* (3) Using `reduceByKey` so that the computation of the index and the ranking is combined.
    */
