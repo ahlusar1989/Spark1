@@ -6,6 +6,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import WikipediaData.filePath
 import WikipediaData.parse
+import scala.annotation.tailrec
 
 case class WikipediaArticle(title: String, text: String)
 
@@ -28,11 +29,12 @@ object WikipediaRanking {
    */
   def occurrencesOfLang(lang: String, rdd: RDD[WikipediaArticle]): Int = {
 
-    val initialCount = 0;
-    val addToCounts = (n: Int, v: WikipediaArticle) => n + 1
-    val sumPartitionCounts = (p1: Int, p2: Int) => p1 + p2
-    val countByKey = rdd.aggregate(initialCount)(addToCounts, sumPartitionCounts)
-    return countByKey
+    def countWords(text: String) = text.split(" ")
+      .map(_.toLowerCase).groupBy(identity).mapValues(_.size)
+
+
+
+    rdd.aggregate(0), countWords(rdd.flatMap(a => a.title.to) ,(a1, a2) => a1 + a2)
   }
 
   /* (1) Use `occurrencesOfLang` to compute the ranking of the languages
@@ -41,16 +43,17 @@ object WikipediaRanking {
    *     languages by their occurence, in decreasing order
    *
    */
+
+
   def rankLangs(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = {
-    val occurences = List[Int](0)
+    var occurences : List[Int] = Nil
     for ( lang <- langs) {
       val count = occurrencesOfLang(lang, rdd)
-      occurences :+ count
+      occurences = occurences :+ count
     }
     val mappingTuples = langs.zip(occurences)
     return mappingTuples.sortBy(_._2)
   }
-
 
 
   /* Compute an inverted index of the set of articles, mapping each language
@@ -65,7 +68,12 @@ object WikipediaRanking {
   }
 
 
-  def rankLangsUsingIndex(index: RDD[(String, Iterable[WikipediaArticle])]): List[(String, Int)] = ???
+  def rankLangsUsingIndex(index: RDD[(String, Iterable[WikipediaArticle])]): List[(String, Int)] = {
+
+
+  }
+
+
 
   /* (3) Using `reduceByKey` so that the computation of the index and the ranking is combined.
    */
