@@ -32,9 +32,7 @@ object WikipediaRanking {
     def countWords(text: String) = text.split(" ")
       .map(_.toLowerCase).groupBy(identity).mapValues(_.size)
 
-
-
-    rdd.aggregate(0), countWords(rdd.flatMap(a => a.title.to) ,(a1, a2) => a1 + a2)
+    rdd.map((article) => article.title.split(" ").filter(_ == lang ).size).reduce(_ + _)
   }
 
   /* (1) Use `occurrencesOfLang` to compute the ranking of the languages
